@@ -1,0 +1,1 @@
+export const cookie_name= 'jwt_cookie';
