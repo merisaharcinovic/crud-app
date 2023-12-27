@@ -21,4 +21,10 @@ export class AuthController {
 
         return user;
     }
+
+    @Post('logout')
+    logout(@Res() res: Response): void {
+      res.clearCookie(cookie_name);
+      res.send('Logged out successfully');
+    }
 }

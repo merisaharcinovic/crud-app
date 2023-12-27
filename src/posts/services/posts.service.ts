@@ -4,6 +4,7 @@ import { PostRepository } from '../../database/repositories/post.repository';
 import { UserRepository } from '../../database/repositories/user.repository';
 import { CommentEntity } from '../../database/entities/comment.entity';
 import { PostEntity } from '../../database/entities/post.entity';
+import { PaginationParamsDto } from '../dtos/pagination-params.dto';
 
 @Injectable()
 export class PostsService {
@@ -20,8 +21,8 @@ export class PostsService {
         }
     }
 
-    getAllPostComments(): Promise<PostEntity[]> {
-        return this.postRepository.getAllPostsComments();
+    getAllPostComments(params: PaginationParamsDto): Promise<[PostEntity[], number]>{
+        return this.postRepository.getAllPostsComments(params);
     }
 
     async getPostComments(postId: number): Promise<CommentEntity[]> {

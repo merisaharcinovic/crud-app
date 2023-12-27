@@ -1,10 +1,14 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { PostsService } from '../services/posts.service';
 import { CreatePostDto } from '../dtos/create-post.dto';
 import { PostEntity } from '../../database/entities/post.entity';
 import { CommentEntity } from '../../database/entities/comment.entity';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles/roles.decorator';
+import { Role } from 'src/auth/roles/role.enum';
+import { PaginationParamsDto } from '../dtos/pagination-params.dto';
+import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -26,10 +30,20 @@ export class PostsController {
     }
 
     @Get()
-    async getAllPostsComments() :  Promise<{message: string, posts: PostEntity[]}>{
+    async getAllPostsComments(@Query() params: PaginationParamsDto) :  Promise<{message: string, paginatedResponse: PaginatedResponseDto<PostEntity>}>{
         try {
-            const posts = await this.postService.getAllPostComments();
-            return { message: 'Post comments retrieved successfully.', posts: posts };
+
+            const [posts, total] = await this.postService.getAllPostComments(params);
+
+            const paginatedResponse: PaginatedResponseDto<PostEntity> = {
+                _meta: {
+                    page: params.page,
+                    per_page: params.per_page,
+                    total: total,
+                },
+                list: posts,
+            };
+            return { message: 'Posts retrieved successfully.', paginatedResponse: paginatedResponse };
 
         } catch (error) {
             if (error instanceof NotFoundException) {
@@ -53,7 +67,8 @@ export class PostsController {
         }
     }
 
-    
+    @UseGuards(JwtGuard, RolesGuard)
+    @Roles(Role.Admin)
     @Delete(':postId')
     async deletePost(@Param('postId') postId: number): Promise<{message: string}> {
         try {

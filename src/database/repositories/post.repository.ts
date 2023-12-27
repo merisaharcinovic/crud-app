@@ -3,6 +3,8 @@ import { Repository, DataSource, EntityManager } from "typeorm";
 import { PostEntity } from "../entities/post.entity";
 import { CreatePostDto } from "src/posts/dtos/create-post.dto";
 import { UserEntity } from "../entities/user.entity";
+import { PaginationParamsDto } from "src/posts/dtos/pagination-params.dto";
+import { PaginatedResponseDto } from "src/posts/dtos/paginated-response.dto";
 
 @Injectable()
 export class PostRepository extends Repository<PostEntity> {
@@ -24,8 +26,12 @@ export class PostRepository extends Repository<PostEntity> {
         return post;
     }
 
-    async getAllPostsComments(): Promise<PostEntity[]> {
-        return this.find({ relations: ['comments', 'comments.user'] });
+    async getAllPostsComments(params: PaginationParamsDto): Promise<[PostEntity[], number]> {
+        return this.findAndCount({
+             relations: ['comments', 'comments.user'],
+             skip: (params.page-1)* params.per_page,
+             take: params.per_page
+            });
     }
 
     async getPostComments(postId: number): Promise<PostEntity> {
